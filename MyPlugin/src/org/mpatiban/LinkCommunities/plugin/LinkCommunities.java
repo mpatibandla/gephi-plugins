@@ -42,6 +42,7 @@ Contributor(s):
 
 package org.mpatiban.LinkCommunities.plugin;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -63,6 +64,7 @@ import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
 
 
+
 public class LinkCommunities implements Statistics, LongTask {
 
     private String report = "";
@@ -73,7 +75,7 @@ public class LinkCommunities implements Statistics, LongTask {
     //private double elapsedTime;
     private long startTime, endTime, duration;
     private partitionDensity pd;
-    
+    private ReportTopComponent r;
     int cid1,cid2;
     double d_cid12;
     ArrayList<HashSet<Edge>> edgesComm = new ArrayList<HashSet<Edge>>();     //creating array list of edges
@@ -233,7 +235,7 @@ pd = new partitionDensity();
                     int m = edgesComm.get(cid1).size();  //for edges as in cid1(obtained by merging)
                     int n = nodesComm.get(cid1).size();  //for nodes as in cid1(obtained by merging)
                     d_cid12 = pd.partitionDensityCommunity(m, n);   //obtaining partition density for the current structure
-                    report= report + "Edge Pairs"+edgesComm.get(cid1)+"----"+"involved nodes"+nodesComm.get(cid1)+"\npartition density for the set "+d_cid12+"\n";
+                    report= report + "<HTML> <BODY> <b> Edge Pairs :</b>"+edgesComm.get(cid1)+"----"+"involved nodes<b>"+nodesComm.get(cid1)+"</b>\n<b>partition density for the set</b> "+d_cid12+"\n";
   
               } else {  //else
                     HashSet<Edge> edgesTemp = new HashSet<Edge>();
@@ -253,7 +255,7 @@ pd = new partitionDensity();
                     int n = nodesComm.get(cid2).size();
                     d_cid12 = pd.partitionDensityCommunity(m, n);
  
-                   report= report +"Edge Pairs "+ edgesComm.get(cid2)+"----"+"involved nodes"+nodesComm.get(cid2)+"\npartition density for the set "+d_cid12+"\n";
+                   report= report +"<HTML> <BODY> <b> Edge Pairs :</b>"+ edgesComm.get(cid2)+"----"+"involved nodes<b>"+nodesComm.get(cid2)+"</b>\n<b>partition density for the set </b>"+d_cid12+"\n";
                 }
    
                 report=report + "Density till now is"+density+"\n";
@@ -270,10 +272,13 @@ pd = new partitionDensity();
         duration = endTime - startTime;
     
     }
-    @Override
-    //displaying
-    public String getReport() {
-        report = "<HTML> <BODY> <h1> Link Communities Report </h1> "
+    
+    @SuppressWarnings("override")
+            public String getReport() {
+        r=new ReportTopComponent();
+        r.componentOpened(report);
+        //r.jScrollBar2.add(r);
+        /*report = "<HTML> <BODY> <h1> Link Communities Report </h1> "
                 + "<hr>"
                 + "<br />" + "<h2> Parameters: </h2>"
                 + "Network Interpretation: undirected <br />"
@@ -284,8 +289,8 @@ pd = new partitionDensity();
                 + report
                 + "<br/> <h2>Reference: </h2> <br/> "
                 + "\"Yong-Yeol Ahn, James P. Bagrow & Sune Lehmann\" \"Link communities reveal multiscale complexity in networks\" 2010"
-                + "</BODY> </HTML>";
-        return report;
+                + "</BODY> </HTML>";*/
+        return "";
     }
     
     @Override
