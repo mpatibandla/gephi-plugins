@@ -74,7 +74,11 @@ public class LinkCommunities implements Statistics, LongTask {
     private long startTime, endTime, duration;
     private partitionDensity pd;
     
-    
+    int cid1,cid2;
+    double d_cid12;
+    ArrayList<HashSet<Edge>> edgesComm = new ArrayList<HashSet<Edge>>();     //creating array list of edges
+    ArrayList<HashSet<Node>> nodesComm = new ArrayList<HashSet<Node>>();     //creating array list of nodes
+        
     @Override
     @SuppressWarnings("empty-statement")
     public void execute(GraphModel gm, AttributeModel am) {
@@ -95,10 +99,8 @@ public class LinkCommunities implements Statistics, LongTask {
         Edge[] edges = hdg.getEdges().toArray();    //getedges() returns edges contained in the graph
         Node[] nodes = hdg.getNodes().toArray();    //getnodes() returns nodes contained in the graph
 
-        ArrayList<HashSet<Edge>> edgesComm = new ArrayList<HashSet<Edge>>();     //creating array list of edges
-        ArrayList<HashSet<Node>> nodesComm = new ArrayList<HashSet<Node>>();     //creating array list of nodes
-        SetTheory<Node> st = new SetTheory<Node>();         //creating set of nodes
-        SetTheory<Edge> ste = new SetTheory<Edge>();        //creating set of edges
+        LinkSet<Node> st = new LinkSet<Node>();         //creating set of nodes
+        LinkSet<Edge> ste = new LinkSet<Edge>();        //creating set of edges
 
 
         int cid = 0;
@@ -193,8 +195,8 @@ public class LinkCommunities implements Statistics, LongTask {
                 }
                 sim_prev = sim; //current sim becomes previous sim for the next iteration
             }
-            int cid1 = (Integer) (temp.getEdge1().getAttributes().getValue("community")); //for edge 1
-            int cid2 = (Integer) (temp.getEdge2().getAttributes().getValue("community")); //for edge 2
+             cid1 = (Integer) (temp.getEdge1().getAttributes().getValue("community")); //for edge 1
+            cid2 = (Integer) (temp.getEdge2().getAttributes().getValue("community")); //for edge 2
 //System.out.println("Cid1->"+cid1+"---\tcid2->"+cid2);
 
             if (cid1 != cid2) { //community id for edge1 != community id for edge 2
@@ -209,7 +211,7 @@ pd = new partitionDensity();
                 double d_cid1 = pd.partitionDensityCommunity(m1, n1); //edges nd nodes given into find partition density for community
                 //null point exception
                 double d_cid2 = pd.partitionDensityCommunity(m2, n2);
-                double d_cid12 = 0.0;   
+                d_cid12 = 0.0;   
 
                 if (m1 >= m2) {   //if community size for m1>m2,
                     HashSet<Edge> edgesTemp = new HashSet<Edge>();  //temporary edges
@@ -231,7 +233,8 @@ pd = new partitionDensity();
                     int m = edgesComm.get(cid1).size();  //for edges as in cid1(obtained by merging)
                     int n = nodesComm.get(cid1).size();  //for nodes as in cid1(obtained by merging)
                     d_cid12 = pd.partitionDensityCommunity(m, n);   //obtaining partition density for the current structure
-                System.out.println("m1>=m2 -- "+edgesComm.get(cid1)+"----"+nodesComm.get(cid1)+"partition density for m,n "+d_cid12);
+                    report= report + "Edge Pairs"+edgesComm.get(cid1)+"----"+"involved nodes"+nodesComm.get(cid1)+"\npartition density for the set "+d_cid12+"\n";
+  
               } else {  //else
                     HashSet<Edge> edgesTemp = new HashSet<Edge>();
                     ste.union(edgesComm.get(cid2), edgesComm.get(cid1), edgesTemp);
@@ -246,16 +249,16 @@ pd = new partitionDensity();
                     edgesComm.get(cid1).clear();
                     nodesComm.get(cid1).clear();
                     edgesComm.set(cid2, edgesTemp); //do the same but now with cid2 as m2>m1
-
-
                     int m = edgesComm.get(cid2).size();
                     int n = nodesComm.get(cid2).size();
                     d_cid12 = pd.partitionDensityCommunity(m, n);
-                    System.out.println("m1<m2 -- "+edgesComm.get(cid2)+"----"+nodesComm.get(cid2)+"partition density for m,n "+d_cid12);
+ 
+                   report= report +"Edge Pairs "+ edgesComm.get(cid2)+"----"+"involved nodes"+nodesComm.get(cid2)+"\npartition density for the set "+d_cid12+"\n";
                 }
-                System.out.println("edges.length="+edges.length+" and density till now is"+density);
+   
+                report=report + "Density till now is"+density+"\n";
                 density = density + (d_cid12 - d_cid1 - d_cid2) * (2.0 / edges.length); //after all that, calculating the density
-                System.out.println("density is "+density);
+                //d.display(density);
             }
             if (cancel) {
                 break;
@@ -277,13 +280,14 @@ pd = new partitionDensity();
                 + "Threshold: " + threshold + " <br />"
                 + "<br>" + "<h2> Results: </h2>"
                 + "Partition Density : " + density + "<br />"
-                + "Time taken to calculate Partition Density " + duration + "ms <br />"
+                + "Time taken to calculate Partition Density " + duration + "ms <br />" 
+                + report
                 + "<br/> <h2>Reference: </h2> <br/> "
                 + "\"Yong-Yeol Ahn, James P. Bagrow & Sune Lehmann\" \"Link communities reveal multiscale complexity in networks\" 2010"
                 + "</BODY> </HTML>";
         return report;
     }
-
+    
     @Override
     public boolean cancel() {
         cancel = true;
