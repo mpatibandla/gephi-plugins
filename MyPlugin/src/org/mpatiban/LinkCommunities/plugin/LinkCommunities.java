@@ -76,6 +76,7 @@ public class LinkCommunities implements Statistics, LongTask {
     
     
     @Override
+    @SuppressWarnings("empty-statement")
     public void execute(GraphModel gm, AttributeModel am) {
         
         HierarchicalUndirectedGraph hdg = gm.getHierarchicalUndirectedGraph();   //graph
@@ -116,11 +117,11 @@ public class LinkCommunities implements Statistics, LongTask {
         for (int i = 0; i < nodes.length; i++) { //for all the nodes
             Edge[] adj = hdg.getEdgesAndMetaEdges(nodes[i]).toArray(); //get all the involved edges and meta edges for each node and add to the node
             int len = adj.length; //adj-length of the array
-
+//System.out.println("Adj.length"+len); test case of 5 nodes, test.gephi, adj.length = 4 for all nodes, clique with partition density=1.0
             if (len > 1) {
                 //create the edges combinations
                 //"[18,0]"-> nodes[i],adj[j]
-                //not understood
+              
                 for (int j = 0; j < len - 1; j++) {
                    // Node value1;
                     if (adj[j].getSource().equals(nodes[i])) {
@@ -139,10 +140,15 @@ public class LinkCommunities implements Statistics, LongTask {
                             value2 = adj[k].getSource();
                             //System.out.println("k = j+1 to len-1; GET SOURCE ID2 \t"+value2.getId());
                         }
-//not unerstood   
+                    
+                        int z=0,y=0;
                         
                         Node[] ngbs1 = hdg.getNeighbors(value1).toArray();
                         Node[] ngbs2 = hdg.getNeighbors(value2).toArray();
+//              for(; z < ngbs1.length && y < ngbs2.length ;z++,y++)
+  //            {
+                  //System.out.println("ngbs1\t"+ngbs1+"-------ngbs2\t"+ngbs2);
+    //          }
                         Set<Node> a = new HashSet<Node>(Arrays.asList(ngbs1));
                         a.add(value1);
                         Set<Node> b = new HashSet<Node>(Arrays.asList(ngbs2));
@@ -154,7 +160,8 @@ public class LinkCommunities implements Statistics, LongTask {
                         double similarity = 1.0 * inter.size() / u.size();
                         EdgePair ep = new EdgePair(1 - similarity, adj[j], adj[k]);
                         heapList.add(ep);
-        System.out.println("value 1\t"+value1+"-----value 2\t"+value2);            }
+        //System.out.println("value 1\t"+value1+"-----value 2\t"+value2);           
+                    }
                 }
             //System.out.println("value 1\t"+value1+"\nvalue 2\t"+ value2);   }
                 } }
@@ -188,7 +195,7 @@ public class LinkCommunities implements Statistics, LongTask {
             }
             int cid1 = (Integer) (temp.getEdge1().getAttributes().getValue("community")); //for edge 1
             int cid2 = (Integer) (temp.getEdge2().getAttributes().getValue("community")); //for edge 2
-
+//System.out.println("Cid1->"+cid1+"---\tcid2->"+cid2);
 
             if (cid1 != cid2) { //community id for edge1 != community id for edge 2
                 count++; 
@@ -209,7 +216,7 @@ pd = new partitionDensity();
                     ste.union(edgesComm.get(cid2), edgesComm.get(cid1), edgesTemp);  //set theory function, union of cid1, cid2 into temp hashset
                     HashSet<Node> nodesTemp = new HashSet<Node>();  //same for nodes
                     st.union(nodesComm.get(cid2), nodesComm.get(cid1), nodesTemp);
-                    nodesComm.set(cid1, nodesTemp);  //array list of nodes, set cid1 nd the added node comm
+                    nodesComm.set(cid1, nodesTemp);  //at index cid1 for nodescomm, nodestemp is replaced
                     Iterator<Edge> it = edgesComm.get(cid2).iterator();  //?
                     while (it.hasNext()) {  //while iteration continues, add that to the community
                         it.next().getEdgeData().getAttributes().setValue("community", cid1);
@@ -218,13 +225,14 @@ pd = new partitionDensity();
                     edgesComm.get(cid1).clear();
                     nodesComm.get(cid2).clear(); //same
 
-                    edgesComm.set(cid1, edgesTemp); //now edgesTemp becomes cid1
+                    edgesComm.set(cid1, edgesTemp); //at index cid1 for edgescomm, edgestemp is replaced
 
 
                     int m = edgesComm.get(cid1).size();  //for edges as in cid1(obtained by merging)
                     int n = nodesComm.get(cid1).size();  //for nodes as in cid1(obtained by merging)
                     d_cid12 = pd.partitionDensityCommunity(m, n);   //obtaining partition density for the current structure
-                } else {  //else
+                System.out.println("m1>=m2 -- "+edgesComm.get(cid1)+"----"+nodesComm.get(cid1)+"partition density for m,n "+d_cid12);
+              } else {  //else
                     HashSet<Edge> edgesTemp = new HashSet<Edge>();
                     ste.union(edgesComm.get(cid2), edgesComm.get(cid1), edgesTemp);
                     HashSet<Node> nodesTemp = new HashSet<Node>();
@@ -243,8 +251,11 @@ pd = new partitionDensity();
                     int m = edgesComm.get(cid2).size();
                     int n = nodesComm.get(cid2).size();
                     d_cid12 = pd.partitionDensityCommunity(m, n);
+                    System.out.println("m1<m2 -- "+edgesComm.get(cid2)+"----"+nodesComm.get(cid2)+"partition density for m,n "+d_cid12);
                 }
+                System.out.println("edges.length="+edges.length+" and density till now is"+density);
                 density = density + (d_cid12 - d_cid1 - d_cid2) * (2.0 / edges.length); //after all that, calculating the density
+                System.out.println("density is "+density);
             }
             if (cancel) {
                 break;
@@ -254,8 +265,8 @@ pd = new partitionDensity();
         }
         endTime = System.currentTimeMillis();
         duration = endTime - startTime;
+    
     }
-
     @Override
     //displaying
     public String getReport() {
@@ -265,7 +276,7 @@ pd = new partitionDensity();
                 + "Network Interpretation: undirected <br />"
                 + "Threshold: " + threshold + " <br />"
                 + "<br>" + "<h2> Results: </h2>"
-                + "Partition Density " + density + "<br />"
+                + "Partition Density : " + density + "<br />"
                 + "Time taken to calculate Partition Density " + duration + "ms <br />"
                 + "<br/> <h2>Reference: </h2> <br/> "
                 + "\"Yong-Yeol Ahn, James P. Bagrow & Sune Lehmann\" \"Link communities reveal multiscale complexity in networks\" 2010"
