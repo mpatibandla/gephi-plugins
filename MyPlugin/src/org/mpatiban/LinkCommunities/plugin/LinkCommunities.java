@@ -42,6 +42,7 @@ Contributor(s):
 
 package org.mpatiban.LinkCommunities.plugin;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,14 +56,20 @@ import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.data.attributes.api.AttributeOrigin;
 import org.gephi.data.attributes.api.AttributeTable;
 import org.gephi.data.attributes.api.AttributeType;
+import org.gephi.data.properties.PropertiesColumn;
+import org.gephi.datalab.api.DataLaboratoryHelper;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.graph.api.HierarchicalUndirectedGraph;
+import org.gephi.preview.api.PreviewController;
+import org.gephi.preview.api.PreviewModel;
 import org.gephi.statistics.spi.Statistics;
 import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
-
+import org.gephi.preview.api.PreviewProperty;
+import org.gephi.preview.types.EdgeColor;
+import org.openide.util.Lookup;
 
 
 public class LinkCommunities implements Statistics, LongTask {
@@ -80,11 +87,12 @@ public class LinkCommunities implements Statistics, LongTask {
     double d_cid12;
     ArrayList<HashSet<Edge>> edgesComm = new ArrayList<HashSet<Edge>>();     //creating array list of edges
     ArrayList<HashSet<Node>> nodesComm = new ArrayList<HashSet<Node>>();     //creating array list of nodes
-        
+    
     @Override
     @SuppressWarnings("empty-statement")
     public void execute(GraphModel gm, AttributeModel am) {
         
+        PreviewModel model = Lookup.getDefault().lookup(PreviewController.class).getModel();
         HierarchicalUndirectedGraph hdg = gm.getHierarchicalUndirectedGraph();   //graph
         List<EdgePair> heapList = new ArrayList<EdgePair>();    //lists for edge pairs
         AttributeTable edgeTable = am.getEdgeTable();           //edge attribute lists
@@ -103,6 +111,8 @@ public class LinkCommunities implements Statistics, LongTask {
 
         LinkSet<Node> st = new LinkSet<Node>();         //creating set of nodes
         LinkSet<Edge> ste = new LinkSet<Edge>();        //creating set of edges
+        
+        
 
 
         int cid = 0;
@@ -165,6 +175,15 @@ public class LinkCommunities implements Statistics, LongTask {
                         EdgePair ep = new EdgePair(1 - similarity, adj[j], adj[k]);
                         heapList.add(ep);
         //System.out.println("value 1\t"+value1+"-----value 2\t"+value2);           
+                    for(int m =0; m < ngbs1.length; m++){
+                        AttributeColumn col = edgeTable.getColumn(PropertiesColumn.NODE_ID.getId());
+                       //edgeTable.replaceColumn(col, report, report, AttributeType.INT, AttributeOrigin.DATA, m);
+                       for(int edg =0;edg <edgeTable.countColumns();edg++){
+                           edgeTable.replaceColumn(col, report, report, AttributeType.INT, AttributeOrigin.DATA, m);
+                           System.out.println("edge table"+edgeTable.getColumn(edg).getId());
+                    }
+        
+                    }
                     }
                 }
             //System.out.println("value 1\t"+value1+"\nvalue 2\t"+ value2);   }
@@ -181,8 +200,9 @@ public class LinkCommunities implements Statistics, LongTask {
   //here the no. of steps is the edge count from the graph
         int heap_count = 0;
         int count = 0;
-
-
+        
+//.getIndex());
+        
         while (!heap.isEmpty()) {
             EdgePair temp = heap.remove(); //remove each edge pair from the heap
             double sim = 1 - temp.getDistance();  //similarity variable = 1- distance of that edge pair
@@ -230,11 +250,12 @@ pd = new partitionDensity();
                     nodesComm.get(cid2).clear(); //same
 
                     edgesComm.set(cid1, edgesTemp); //at index cid1 for edgescomm, edgestemp is replaced
-
+                   
 
                     int m = edgesComm.get(cid1).size();  //for edges as in cid1(obtained by merging)
                     int n = nodesComm.get(cid1).size();  //for nodes as in cid1(obtained by merging)
                     d_cid12 = pd.partitionDensityCommunity(m, n);   //obtaining partition density for the current structure
+               
                     report= report + "<HTML> <BODY> <b> Edge Pairs :</b>"+edgesComm.get(cid1)+"----"+"involved nodes<b>"+nodesComm.get(cid1)+"</b>\n<b>partition density for the set</b> "+d_cid12+"\n";
   
               } else {  //else
@@ -256,8 +277,9 @@ pd = new partitionDensity();
                     d_cid12 = pd.partitionDensityCommunity(m, n);
  
                    report= report +"<HTML> <BODY> <b> Edge Pairs :</b>"+ edgesComm.get(cid2)+"----"+"involved nodes<b>"+nodesComm.get(cid2)+"</b>\n<b>partition density for the set </b>"+d_cid12+"\n";
+                   edgesComm.get(cid1);
                 }
-   
+                
                 report=report + "Density till now is"+density+"\n";
                 density = density + (d_cid12 - d_cid1 - d_cid2) * (2.0 / edges.length); //after all that, calculating the density
                 //d.display(density);
@@ -275,10 +297,10 @@ pd = new partitionDensity();
     
     @SuppressWarnings("override")
             public String getReport() {
-        r=new ReportTopComponent();
-        r.componentOpened(report);
+        //r=new ReportTopComponent();
+        //r.componentOpened(report);
         //r.jScrollBar2.add(r);
-        /*report = "<HTML> <BODY> <h1> Link Communities Report </h1> "
+        report = "<HTML> <BODY> <h1> Link Communities Report </h1> "
                 + "<hr>"
                 + "<br />" + "<h2> Parameters: </h2>"
                 + "Network Interpretation: undirected <br />"
@@ -289,8 +311,8 @@ pd = new partitionDensity();
                 + report
                 + "<br/> <h2>Reference: </h2> <br/> "
                 + "\"Yong-Yeol Ahn, James P. Bagrow & Sune Lehmann\" \"Link communities reveal multiscale complexity in networks\" 2010"
-                + "</BODY> </HTML>";*/
-        return "";
+                + "</BODY> </HTML>";
+        return report;
     }
     
     @Override
